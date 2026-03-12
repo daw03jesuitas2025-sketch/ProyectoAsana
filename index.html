@@ -1,33 +1,66 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Proyecto Asana</title>
-    <link rel="stylesheet" href="estilos.css">
-    <script src="script.js"></script>
-  </head>
-  <body>
-    <h1>Proyecto Asana-Board</h1>
-    <main>
-      <section id="Asana-Controls">
-        <!-- <button id="btnTarea">Crear Tarea</button> -->
-        <button id="btnColumna">Añadir columna</button>
-        <button id="btnFiltrar">Filtrar</button>
-        <button id="btnOrdenar">Ordenar</button>
-        <button id="btnBuscar">Buscar</button>
-      </section>
-      <section id="Asana-Board">
-        <div class="columna">
-          <h2>TO DO</h2>
-        </div>
-        <div class="columna">
-          <h2>In Progress</h2>
-        </div>
-        <div class="columna">
-          <h2>Done</h2>
-        </div>
-      </section>
-    </main>
-  </body>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kanban 2026</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script src="script.js"></script>
+
+</head>
+
+<body>
+
+  <header>
+    <h2>Kanban 2026</h2>
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="🔍 Search...">
+      <select id="columnFilter">
+        <option value="all">Filters</option>
+        <option value="TO DO">TO DO</option>
+        <option value="IN PROGRESS">IN PROGRESS</option>
+        <option value="REVIEW">REVIEW</option>
+        <option value="DONE">DONE</option>
+      </select>
+      <button id="addColumn">+ New Column</button>
+    </div>
+  </header>
+
+  <div class="board" id="board">
+    <div class="columna">
+      <div class="columna-header">
+        <input type="text" value="TO DO">
+      </div>
+      <div class="contenedor-tareas"></div>
+      <button class="add-card-btn">+ Add Card</button>
+    </div>
+
+    <div class="columna">
+      <div class="columna-header">
+        <input type="text" value="IN PROGRESS">
+      </div>
+      <div class="contenedor-tareas"></div>
+      <button class="add-card-btn">+ Add Card</button>
+    </div>
+
+    <div class="columna">
+      <div class="columna-header">
+        <input type="text" value="REVIEW">
+      </div>
+      <div class="contenedor-tareas"></div>
+      <button class="add-card-btn">+ Add Card</button>
+    </div>
+
+    <div class="columna">
+      <div class="columna-header">
+        <input type="text" value="DONE">
+      </div>
+      <div class="contenedor-tareas"></div>
+      <button class="add-card-btn">+ Add Card</button>
+    </div>
+  </div>
+
+</body>
+
 </html>

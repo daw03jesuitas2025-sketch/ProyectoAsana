@@ -1,192 +1,223 @@
 window.onload = function () {
-  // 1. DOM
-  const controles = document.getElementById("Asana-Controls");
-  const btnColumna = document.getElementById("btnColumna");
-  const btnFiltrar = document.getElementById("btnFiltrar");
-  const btnOrdenar = document.getElementById("btnOrdenar");
-  const btnBuscar = document.getElementById("btnBuscar");
-  const board = document.getElementById("Asana-Board");
+  const board = document.getElementById("board");
+  const addColumn = document.getElementById("addColumn");
+  const searchInput = document.getElementById("searchInput");
+  const columnFilter = document.getElementById("columnFilter");
 
-  // Botón de editar y eliminar
-  function acciones(elemento) {
-    const btnEditar = document.createElement("button");
-    btnEditar.textContent = "Editar";
-    btnEditar.classList.add("button");
-    elemento.appendChild(btnEditar);
+  addColumn.onclick = function () {
+    añadirColumna();
+  };
 
-    btnEditar.addEventListener("click", function () {
-      const inputLocal = elemento.querySelector(".input");
-      if (inputLocal) {
-        inputLocal.focus();
+  searchInput.addEventListener("input", function () {
+    const texto = searchInput.value.toLowerCase();
+    document.querySelectorAll(".tarea").forEach((tarea) => {
+      const input = tarea.querySelector("input");
+      const contenido = input.value.toLowerCase();
+      tarea.style.display = contenido.includes(texto) ? "block" : "none";
+    });
+  });
+
+  // Evento filtro
+
+  columnFilter.addEventListener("change", function () {
+    const filtro = columnFilter.value.toUpperCase();
+    const columnas = document.querySelectorAll(".columna");
+
+    columnas.forEach(function (columna) {
+      const titulo = columna.querySelector(".columna-header input").value.toUpperCase();
+
+      // Si el filtro es "ALL" O el título coincid
+      if (filtro === "ALL" || titulo === filtro) {
+        columna.style.display = "flex";
+      } else {
+        columna.style.display = "none";
       }
     });
+  });
 
-    const btnEliminar = document.createElement("button");
-    btnEliminar.textContent = "Eliminar";
-    btnEliminar.classList.add("button");
-    elemento.appendChild(btnEliminar);
+  // Cargar el estado al iniciar
+  cargarEstado();
+};
 
-    btnEliminar.addEventListener("click", function () {
-      const respuesta = confirm("¿Estás seguro que quieres eliminarlo?");
-      if (respuesta) {
-        elemento.remove();
-        alert("Eliminado correctamente");
-      }
-    });
-  }
+// Drag and Drop
 
-  // 2. Crear columna y tarea
-  // btnColumna.addEventListener("click", function (event) {
-  //   columna = document.createElement("div");
-  //   columna.classList.add("columna");
+let tareaArrastrada = null;
 
-  //   botones = document.createElement("div");
-  //   botones.classList.add("botones");
+function DragAndDrop(tarea) {
+  tarea.setAttribute("draggable", "true");
+  tarea.addEventListener("dragstart", () => {
+    tareaArrastrada = tarea;
+    tarea.classList.add("dragging");
+  });
+  tarea.addEventListener("dragend", () => {
+    tarea.classList.remove("dragging");
+    tareaArrastrada = null;
+  });
+}
 
-  //   btnTarea = document.createElement("button");
-  //   btnTarea.textContent = "Añadir tarea";
-  //   btnTarea.classList.add("button");
+function ContenedorDrop(contenedor) {
+  // dragover cuando la tarea se arrastra sobre el contenedor
+  contenedor.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    contenedor.classList.add("drag-over");
+  });
+  // dragleave cuando la tarea la quito del contenedor
+  contenedor.addEventListener("dragleave", () => {
+    contenedor.classList.remove("drag-over");
+  });
+  // cuando la suelto
+  contenedor.addEventListener("drop", () => {
+    contenedor.classList.remove("drag-over");
+    if (tareaArrastrada) {
+      contenedor.appendChild(tareaArrastrada);
+      guardarEstado();
+    }
+  });
+}
 
-  //   input = document.createElement("input");
-  //   input.type = "text";
-  //   input.placeholder = "Escribe el título";
-  //   input.classList.add("input");
+// botones de editar y eliminar
 
-  //   board.appendChild(columna);
-  //   columna.appendChild(botones);
-  //   botones.appendChild(btnTarea);
-  //   acciones(botones);
-  //   columna.appendChild(input);
-  //   input.focus(); // ?????
+function crearBotonesAccion(
+  contenedorBotones,
+  inputAEnfocar,
+  elementoAEliminar,
+) {
+  const btnEditar = document.createElement("button");
+  btnEditar.textContent = "✎";
+  btnEditar.classList.add("btn-accion");
+  contenedorBotones.appendChild(btnEditar);
 
-  //   // 3. Crear tarea dentro de la columna
+  btnEditar.addEventListener("click", () => inputAEnfocar.focus());
 
-  //   btnTarea.addEventListener("click", function (event) {
-  //     const target = event.currentTarget;
-  //     const columnaActual = target.parentElement;
+  const btnEliminar = document.createElement("button");
+  btnEliminar.textContent = "✕";
+  btnEliminar.classList.add("btn-accion");
+  contenedorBotones.appendChild(btnEliminar);
 
-  //     const tarea = document.createElement("div");
-  //     tarea.classList.add("tarea");
+  btnEliminar.addEventListener("click", function () {
+    if (confirm("¿Eliminar este elemento?")) {
+      elementoAEliminar.remove();
+      guardarEstado();
+    }
+  });
+}
 
-  //   columnaActual.appendChild(tarea);
+function crearTarea(boton, contenedor) {
+  boton.addEventListener("click", function () {
+    const tarea = document.createElement("div");
+    tarea.classList.add("tarea");
+    const tareaTop = document.createElement("div");
+    tareaTop.classList.add("tarea-top");
+    const inputTarea = document.createElement("input");
+    inputTarea.placeholder = "Escribe la tarea...";
 
-  //     const input = document.createElement("input");
-  //     input.type = "text";
-  //     input.placeholder = "Escribe la tarea";
-  //     input.classList.add("input");
+    inputTarea.addEventListener("change", guardarEstado);
 
-  //     columna.appendChild(tarea);
-  //     tarea.appendChild(input);
-  //     tarea.focus();
-  //     acciones(tarea);
+    tareaTop.appendChild(inputTarea);
+    tarea.appendChild(tareaTop);
+    crearBotonesAccion(tareaTop, inputTarea, tarea);
+    DragAndDrop(tarea);
 
-  //     // check cuando la tarea esté finalizada
+    contenedor.appendChild(tarea);
+    guardarEstado();
+  });
+}
 
-  //     const inputCheck = document.createElement("input");
-  //     inputCheck.type = "checkbox";
-  //     const mensaje = document.createElement("span");
-  //     mensaje.textContent = "Tarea finalizada";
+function añadirColumna() {
+  const board = document.getElementById("board");
+  const columna = document.createElement("div");
+  columna.classList.add("columna");
 
-  //     // inputCheck.classList.add("input");
-  //     tarea.appendChild(inputCheck);
+  const header = document.createElement("div");
+  header.classList.add("columna-header");
+  const titulo = document.createElement("input");
+  titulo.placeholder = "Nueva Columna";
+  titulo.addEventListener("change", guardarEstado);
+  header.appendChild(titulo);
 
-  //     inputCheck.addEventListener("change", function () {
-  //       if (inputCheck.checked) {
-  //         mensaje.style.display = "block";
-  //         mensaje.style.color = "green";
-  //       } else {
-  //         mensaje.style.display = "none";
-  //       }
-  //       tarea.appendChild(mensaje);
-  //     });
-  //   });
-  // });
+  const contenedorTareas = document.createElement("div");
+  contenedorTareas.classList.add("contenedor-tareas");
+  ContenedorDrop(contenedorTareas);
 
-  // 2. Crear columna
-  btnColumna.addEventListener("click", function (event) {
+  const btnTarea = document.createElement("button");
+  btnTarea.textContent = "+ Add Card";
+  btnTarea.classList.add("add-card-btn");
+
+  columna.appendChild(header);
+  columna.appendChild(contenedorTareas);
+  columna.appendChild(btnTarea);
+
+  crearBotonesAccion(header, titulo, columna);
+  board.appendChild(columna);
+
+  crearTarea(btnTarea, contenedorTareas);
+  guardarEstado();
+}
+
+/* LOCAL STORAGE */
+
+function guardarEstado() {
+  const columnas = [];
+  document.querySelectorAll(".columna").forEach((col) => {
+    const inputTitulo = col.querySelector(".columna-header input");
+    const titulo = inputTitulo ? inputTitulo.value : "";
+    const tareas = [];
+    col.querySelectorAll(".tarea input").forEach((t) => tareas.push(t.value));
+    columnas.push({ titulo, tareas });
+  });
+  // convertir en texto json
+  localStorage.setItem("kanban_data", JSON.stringify(columnas));
+}
+
+function cargarEstado() {
+  const board = document.getElementById("board");
+  const datosRaw = localStorage.getItem("kanban_data");
+  if (!datosRaw) return;
+  // convertir de texto a objeto
+  const datos = JSON.parse(datosRaw);
+  board.innerHTML = "";
+
+  datos.forEach((dataCol) => {
     const columna = document.createElement("div");
     columna.classList.add("columna");
 
-    const botonesColumna = document.createElement("div");
-    botonesColumna.classList.add("botones");
+    const header = document.createElement("div");
+    header.classList.add("columna-header");
+    const titulo = document.createElement("input");
+    titulo.value = dataCol.titulo;
+    titulo.addEventListener("change", guardarEstado);
+    header.appendChild(titulo);
+
+    const contenedorTareas = document.createElement("div");
+    contenedorTareas.classList.add("contenedor-tareas");
+    ContenedorDrop(contenedorTareas);
 
     const btnTarea = document.createElement("button");
-    btnTarea.textContent = "Añadir tarea";
-    btnTarea.classList.add("button");
+    btnTarea.textContent = "+ Add Card";
+    btnTarea.classList.add("add-card-btn");
 
-    const inputColumna = document.createElement("input");
-    inputColumna.type = "text";
-    inputColumna.placeholder = "Escribe el nombre de la columna";
-    inputColumna.classList.add("input");
+    columna.appendChild(header);
+    columna.appendChild(contenedorTareas);
+    columna.appendChild(btnTarea);
 
+    crearBotonesAccion(header, titulo, columna);
     board.appendChild(columna);
-    columna.appendChild(botonesColumna);
-    botonesColumna.appendChild(btnTarea);
 
-    // El botón de editar/eliminar de esta columna
-    acciones(columna);
-
-    columna.appendChild(inputColumna);
-    inputColumna.focus();
-
-    // 3. Crear tarea dentro de esta columna
-    btnTarea.addEventListener("click", function (event) {
+    dataCol.tareas.forEach((dataTarea) => {
       const tarea = document.createElement("div");
       tarea.classList.add("tarea");
-
+      const tareaTop = document.createElement("div");
+      tareaTop.classList.add("tarea-top");
       const inputTarea = document.createElement("input");
-      inputTarea.type = "text";
-      inputTarea.placeholder = "Escribe el título de la tarea";
-      inputTarea.classList.add("input");
-
-      columna.appendChild(tarea);
-      tarea.appendChild(inputTarea);
-
-      // El botón de editar/eliminar de la tarea
-      acciones(tarea);
-      inputTarea.focus();
-
-      // Checkbox finalizada
-      const inputCheck = document.createElement("input");
-      inputCheck.type = "checkbox";
-      const mensaje = document.createElement("span");
-
-      tarea.appendChild(inputCheck);
-      tarea.appendChild(mensaje);
-
-      inputCheck.addEventListener("change", function () {
-        if (inputCheck.checked) {
-          mensaje.textContent = "Tarea finalizada";
-          mensaje.style.display = "block";
-          mensaje.style.color = "green";
-        } else {
-          mensaje.style.display = "none";
-        }
-        tarea.appendChild(mensaje);
-      });
+      inputTarea.value = dataTarea;
+      inputTarea.addEventListener("change", guardarEstado);
+      tareaTop.appendChild(inputTarea);
+      tarea.appendChild(tareaTop);
+      crearBotonesAccion(tareaTop, inputTarea, tarea);
+      DragAndDrop(tarea);
+      contenedorTareas.appendChild(tarea);
     });
+
+    crearTarea(btnTarea, contenedorTareas);
   });
-// LocalStorage
-  function guardarDatos(){
-    let guardarTableto = [];
-  }
-
-  // Botón Buscar
-
-  btnBuscar.addEventListener('click', function(){
-
-  })
-
-  // Botón Filtrar
-
-btnFiltrar.addEventListener('click', function(){
-
-})
-
-  // Botón Ordenar
-
-  btnOrdenar.addEventListener('click', function(){
-    
-  })
-
-};
+}

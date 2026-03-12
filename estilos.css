@@ -1,137 +1,238 @@
-body {
-  background-color: rgb(71, 71, 71);
-  color: white;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+* {
   margin: 0;
-  padding: 20px;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
 }
 
-h1 {
-  text-align: center;
-  padding: 20px;
-  font-weight: 300;
-  letter-spacing: 1px;
+body {
+  background: #f4f5f7;
+  color: #172b4d;
 }
 
-/* 1. Controles (Header) */
-#Asana-Controls {
+/* 
+   HEADER Y CONTROLES
+    */
+header {
+  background: white;
+  padding: 15px 25px;
   display: flex;
-  flex-direction: row;
-  justify-content: center; 
+  justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  border: 1px solid white;
-  border-radius: 8px;
-  margin-bottom: 30px;
-  gap: 15px; 
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #ddd;
 }
 
-/* Botones Principales */
-#Asana-Controls button {
-  background-color: #4573d2;
+header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+}
+
+input[type="text"], select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #dfe1e6;
+  background: #fafbfc;
+  font-size: 14px;
+  outline: none;
+  transition: border 0.2s;
+}
+
+input[type="text"]:focus {
+  border-color: #2563eb;
+  background: white;
+}
+
+button#addColumn {
+  background: #2563eb;
   color: white;
   border: none;
-  padding: 10px 18px;
+  padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
-  transition: transform 0.1s, background-color 0.2s;
+  font-weight: 600;
+  font-size: 14px;
 }
 
-#Asana-Controls button:hover {
-  background-color: #3561bd;
-  transform: translateY(-1px);
+button#addColumn:hover {
+  background: #1d4ed8;
 }
 
-/* 2. El Tablero (Board) */
-#Asana-Board {
+/* 
+  BOARD
+    */
+.board {
   display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: flex-start;
+  gap: 16px;
   padding: 20px;
-  gap: 20px;
-  background-color: rgb(71, 71, 71);
-  border-radius: 12px;
-  min-height: 70vh;
   overflow-x: auto;
+  align-items: flex-start; 
 }
-/* 3. Columnas */
+
+/* 
+   COLUMNAS
+    */
 .columna {
-  background-color: #2a2b2d;
-  padding: 15px;
-  width: 300px;
-  min-width: 300px;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: #ebecf0;
+  min-width: 280px;
+  max-width: 280px;
+  padding: 12px;
   border-radius: 10px;
   display: flex;
   flex-direction: column;
+  max-height: 85vh; 
+  overflow: hidden;
 }
 
-/* Titulo de la columna (Input negrita) */
-.columna .input {
-  font-weight: bold;
-  font-size: 1.1rem;
-  margin-bottom: 15px;
+.columna-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
   width: 100%;
 }
 
-/* 4. Tareas (Cards) */
+.columna-header input {
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  font-size: 14px;
+  color: #000000;
+  text-transform: uppercase;
+  flex: 1;
+  min-width: 0; 
+}
+
+/* 
+   BOTONES (EDITAR/ELIMINAR)
+    */
+.btn-accion {
+  background: #dfe1e6;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  color: #42526e;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-left: 4px;
+  flex-shrink: 0; 
+}
+
+.btn-accion:hover {
+  background: #d1d5db;
+  color: #172b4d;
+}
+
+/* 
+   TAREAS
+    */
+.contenedor-tareas {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 20px; 
+  padding-bottom: 5px;
+}
+
 .tarea {
-  background-color: #3b3c3e;
-  margin-bottom: 12px;
-  padding: 15px;
+  background: white;
+  padding: 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.05);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  transition: border-color 0.2s;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+  border: 1px solid transparent;
+  transition: box-shadow 0.2s;
 }
 
 .tarea:hover {
-  border-color: var(--asana-blue);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilo común de inputs */
-.input {
+.tarea-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tarea input {
   border: none;
-  background-color: transparent;
-  outline: none;
-  color: inherit;
   width: 100%;
+  font-size: 14px;
+  color: #172b4d;
+  background: transparent;
+  outline: none;
+  min-width: 0;
+  flex: 1;
 }
 
-.tarea .input {
-  margin-bottom: 15px;
-  font-size: 0.95rem;
-  display: block;
-}
-
-/* 5. Botones de Editar/Eliminar/AñadirTarea */
-.button {
-  background-color: rgba(255,255,255,0.1);
-  color: #ccc;
+/* 
+   BOTÓN AÑADIR
+    */
+.add-card-btn {
+  background: transparent;
   border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 11px;
+  color: #5e6c84;
+  text-align: left;
+  padding: 8px 12px;
   cursor: pointer;
-  margin-right: 5px;
-  margin-bottom: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  margin-top: 4px;
 }
 
-.button:hover {
-  background-color: rgba(255,255,255,0.2);
-  color: white;
+.add-card-btn:hover {
+  background-color: rgba(9, 30, 66, 0.08);
+  color: #172b4d;
 }
 
-/* Checkbox y mensaje de finalizado */
-input[type="checkbox"] {
-  cursor: pointer;
-  accent-color: #25e881;
+/* 
+  DRAG AND DROP
+    */
+.tarea.dragging {
+  opacity: 0.4;
+  background: #f4f5f7;
 }
 
-span {
-  font-size: 12px;
-  margin-left: 10px;
-  font-style: italic;
+.contenedor-tareas.drag-over {
+  background: rgba(37, 99, 235, 0.05);
+  border-radius: 6px;
+}
+
+/*
+   MOBILE RESPONSIVE
+  */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 15px;
+  } 
+
+  .controls {
+    width: 100%;
+    flex-direction: column; 
+  }
+
+  .controls input, .controls select, #addColumn {
+    width: 100%; 
+  }
+
+  .board {
+    flex-direction: column; 
+    align-items: center;
+    overflow-x: hidden; 
+  }
+
+  .columna {
+    width: 100%; 
+    max-width: 100%;
+    min-width: 0;
+    max-height: none; 
+  }
 }
