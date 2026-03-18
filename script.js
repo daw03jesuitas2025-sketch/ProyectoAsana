@@ -1,5 +1,4 @@
 window.onload = function () {
-  const board = document.getElementById("board");
   const addColumn = document.getElementById("addColumn");
   const searchInput = document.getElementById("searchInput");
   const columnFilter = document.getElementById("columnFilter");
@@ -26,7 +25,7 @@ window.onload = function () {
     columnas.forEach(function (columna) {
       const titulo = columna.querySelector(".columna-header input").value.toUpperCase();
 
-      // Si el filtro es "ALL" O el título coincid
+      // Si el filtro es "ALL" O el título coincide
       if (filtro === "ALL" || titulo === filtro) {
         columna.style.display = "flex";
       } else {
@@ -38,6 +37,7 @@ window.onload = function () {
   // Cargar el estado al iniciar
   cargarEstado();
 };
+
 
 // Drag and Drop
 
@@ -86,7 +86,6 @@ function crearBotonesAccion(
   btnEditar.textContent = "✎";
   btnEditar.classList.add("btn-accion");
   contenedorBotones.appendChild(btnEditar);
-
   btnEditar.addEventListener("click", () => inputAEnfocar.focus());
 
   const btnEliminar = document.createElement("button");
@@ -104,54 +103,58 @@ function crearBotonesAccion(
 
 function crearTarea(boton, contenedor) {
   boton.addEventListener("click", function () {
-    const tarea = document.createElement("div");
-    tarea.classList.add("tarea");
-    const tareaTop = document.createElement("div");
-    tareaTop.classList.add("tarea-top");
-    const inputTarea = document.createElement("input");
-    inputTarea.placeholder = "Escribe la tarea...";
+    const template = document.getElementById("template-tarea").content;
+    const clon = document.importNode(template, true);
+    const tarea = clon.querySelector(".tarea");
+    const tareaTop = clon.querySelector(".tarea-top");
+    const inputTarea = clon.querySelector("input");
 
     inputTarea.addEventListener("change", guardarEstado);
 
-    tareaTop.appendChild(inputTarea);
-    tarea.appendChild(tareaTop);
     crearBotonesAccion(tareaTop, inputTarea, tarea);
     DragAndDrop(tarea);
 
-    contenedor.appendChild(tarea);
+    contenedor.appendChild(clon);
     guardarEstado();
   });
 }
 
 function añadirColumna() {
   const board = document.getElementById("board");
-  const columna = document.createElement("div");
-  columna.classList.add("columna");
+  const template = document.getElementById("template-columna").content;
 
-  const header = document.createElement("div");
-  header.classList.add("columna-header");
-  const titulo = document.createElement("input");
-  titulo.placeholder = "Nueva Columna";
+  // clonar el template
+  const clon = document.importNode(template, true);
+
+  const columna = clon.querySelector(".columna");
+  const header = clon.querySelector(".columna-header");
+  const titulo = clon.querySelector(".columna-header input");
+  const contenedorTareas = clon.querySelector(".contenedor-tareas");
+  const btnTarea = clon.querySelector(".add-card-btn");
+
   titulo.addEventListener("change", guardarEstado);
-  header.appendChild(titulo);
-
-  const contenedorTareas = document.createElement("div");
-  contenedorTareas.classList.add("contenedor-tareas");
   ContenedorDrop(contenedorTareas);
 
-  const btnTarea = document.createElement("button");
-  btnTarea.textContent = "+ Add Card";
-  btnTarea.classList.add("add-card-btn");
-
-  columna.appendChild(header);
-  columna.appendChild(contenedorTareas);
-  columna.appendChild(btnTarea);
-
   crearBotonesAccion(header, titulo, columna);
-  board.appendChild(columna);
+
+  board.appendChild(clon);
 
   crearTarea(btnTarea, contenedorTareas);
+
+  actualizarContadores();
   guardarEstado();
+}
+
+// Contador tareas
+function contarTareas() {
+  // foreach para recorrer las tareas de cada columna y guardar los datos si añades o eliminas tareas
+  const columnas = document.querySelectorAll('.columna');
+
+  columnas.forEach((columna) => {
+    const contador = document.querySelector('.contador-tareas');
+    const numTareas = columna.querySelectorAll('.tarea').length;
+    contador.textContent = numTareas;
+  })
 }
 
 /* LOCAL STORAGE */
@@ -164,6 +167,8 @@ function guardarEstado() {
     const tareas = [];
     col.querySelectorAll(".tarea input").forEach((t) => tareas.push(t.value));
     columnas.push({ titulo, tareas });
+    const contador = col.querySelector('.contador-tareas');                                  
+      contador.textContent = tareas.length;
   });
   // convertir en texto json
   localStorage.setItem("kanban_data", JSON.stringify(columnas));
@@ -178,46 +183,37 @@ function cargarEstado() {
   board.innerHTML = "";
 
   datos.forEach((dataCol) => {
-    const columna = document.createElement("div");
-    columna.classList.add("columna");
+    const tempCol = document.getElementById("template-columna").content;
+    const clonCol = document.importNode(tempCol, true);
+    const columna = clonCol.querySelector(".columna");
+    const header = clonCol.querySelector(".columna-header");
+    const tituloInput = clonCol.querySelector(".columna-header input");
+    const contador = clonCol.querySelector(".contador-tareas");
+    const contenedorTareas = clonCol.querySelector(".contenedor-tareas");
+    const btnTarea = clonCol.querySelector(".add-card-btn");
 
-    const header = document.createElement("div");
-    header.classList.add("columna-header");
-    const titulo = document.createElement("input");
-    titulo.value = dataCol.titulo;
-    titulo.addEventListener("change", guardarEstado);
-    header.appendChild(titulo);
+    tituloInput.value = dataCol.titulo;
+    contador.textContent = dataCol.tareas.length;
 
-    const contenedorTareas = document.createElement("div");
-    contenedorTareas.classList.add("contenedor-tareas");
+    tituloInput.addEventListener("change", guardarEstado);
     ContenedorDrop(contenedorTareas);
-
-    const btnTarea = document.createElement("button");
-    btnTarea.textContent = "+ Add Card";
-    btnTarea.classList.add("add-card-btn");
-
-    columna.appendChild(header);
-    columna.appendChild(contenedorTareas);
-    columna.appendChild(btnTarea);
-
-    crearBotonesAccion(header, titulo, columna);
-    board.appendChild(columna);
-
-    dataCol.tareas.forEach((dataTarea) => {
-      const tarea = document.createElement("div");
-      tarea.classList.add("tarea");
-      const tareaTop = document.createElement("div");
-      tareaTop.classList.add("tarea-top");
-      const inputTarea = document.createElement("input");
-      inputTarea.value = dataTarea;
-      inputTarea.addEventListener("change", guardarEstado);
-      tareaTop.appendChild(inputTarea);
-      tarea.appendChild(tareaTop);
-      crearBotonesAccion(tareaTop, inputTarea, tarea);
-      DragAndDrop(tarea);
-      contenedorTareas.appendChild(tarea);
-    });
-
+    crearBotonesAccion(header, tituloInput, columna);
     crearTarea(btnTarea, contenedorTareas);
+
+    dataCol.tareas.forEach((textoTarea) => {
+      const tempTarea = document.getElementById("template-tarea").content;
+      const clonTarea = document.importNode(tempTarea, true);
+      const tareaDiv = clonTarea.querySelector(".tarea");
+      const tareaTop = clonTarea.querySelector(".tarea-top");
+      const inputTarea = clonTarea.querySelector("input");
+      inputTarea.value = textoTarea;
+
+      inputTarea.addEventListener("change", guardarEstado);
+      crearBotonesAccion(tareaTop, inputTarea, tareaDiv);
+      DragAndDrop(tareaDiv);
+      contenedorTareas.appendChild(clonTarea);
+    });
+    board.appendChild(clonCol);
   });
 }
+

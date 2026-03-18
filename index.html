@@ -28,7 +28,28 @@
   </header>
 
   <div class="board" id="board">
+  </div>
+
+  <template id="template-columna">
     <div class="columna">
+      <div class="columna-header">
+        <input type="text" class="titulo-columna">
+        <span class="contador-tareas">0</span>
+      </div>
+      <div class="contenedor-tareas"></div>
+      <button class="add-card-btn">+ Add Card</button>
+    </div>
+  </template>
+
+  <template id="template-tarea">
+    <div class="tarea">
+      <div class="tarea-top">
+        <input type="text" placeholder="Escribe la tarea...">
+      </div>
+    </div>
+  </template>
+
+  <!-- <div class="columna">
       <div class="columna-header">
         <input type="text" value="TO DO">
       </div>
@@ -58,7 +79,7 @@
       </div>
       <div class="contenedor-tareas"></div>
       <button class="add-card-btn">+ Add Card</button>
-    </div>
+    </div> -->
   </div>
 
 </body>
