@@ -23,7 +23,9 @@ window.onload = function () {
     const columnas = document.querySelectorAll(".columna");
 
     columnas.forEach(function (columna) {
-      const titulo = columna.querySelector(".columna-header input").value.toUpperCase();
+      const titulo = columna
+        .querySelector(".columna-header input")
+        .value.toUpperCase();
 
       // Si el filtro es "ALL" O el título coincide
       if (filtro === "ALL" || titulo === filtro) {
@@ -37,6 +39,34 @@ window.onload = function () {
   // Cargar el estado al iniciar
   cargarEstado();
 };
+
+
+// INDEXDDB
+
+const indexdDB = window.indexedDB;
+let db;
+const conexion = indexdDB.open("kanban_data", 1);
+
+conexion.onsuccess = () => {
+  db = conexion.result;
+  console.log('Base de datos abierta', 1);
+  cargarEstado();
+}
+
+conexion.onupgradeneeded = (e) =>{
+  db = e.target.result;
+  console.log('Base de datos creada', db);
+  const columnasStore = db.createObjectStore('columnas', {
+    keyPath: 'idColumna', autoIncrement: true
+  })
+  const tareasStore = db.createObjectStore('tareas', {
+    keyPath : 'id', autoIncrement: true
+  })
+}
+
+conexion.onerror = (error) => {
+  console.log('Eror: ', error);
+}
 
 
 // Drag and Drop
@@ -141,20 +171,20 @@ function añadirColumna() {
 
   crearTarea(btnTarea, contenedorTareas);
 
-  actualizarContadores();
+  contarTareas();
   guardarEstado();
 }
 
 // Contador tareas
 function contarTareas() {
   // foreach para recorrer las tareas de cada columna y guardar los datos si añades o eliminas tareas
-  const columnas = document.querySelectorAll('.columna');
+  const columnas = document.querySelectorAll(".columna");
 
   columnas.forEach((columna) => {
-    const contador = document.querySelector('.contador-tareas');
-    const numTareas = columna.querySelectorAll('.tarea').length;
+    const contador = columna.querySelector(".contador-tareas");
+    const numTareas = columna.querySelectorAll(".tarea").length;
     contador.textContent = numTareas;
-  })
+  });
 }
 
 /* LOCAL STORAGE */
@@ -167,8 +197,8 @@ function guardarEstado() {
     const tareas = [];
     col.querySelectorAll(".tarea input").forEach((t) => tareas.push(t.value));
     columnas.push({ titulo, tareas });
-    const contador = col.querySelector('.contador-tareas');                                  
-      contador.textContent = tareas.length;
+    const contador = col.querySelector(".contador-tareas");
+    contador.textContent = tareas.length;
   });
   // convertir en texto json
   localStorage.setItem("kanban_data", JSON.stringify(columnas));
@@ -216,4 +246,3 @@ function cargarEstado() {
     board.appendChild(clonCol);
   });
 }
-

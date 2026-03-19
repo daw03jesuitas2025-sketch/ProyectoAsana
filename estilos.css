@@ -211,7 +211,7 @@ button#addColumn:hover {
     background-color: #dfe1e6;
     width: 26px;
     height: 19px;
-    padding: 2px 8px;
+    padding: 0px 8px;
     border-radius: 50px;
 }
 
