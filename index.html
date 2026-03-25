@@ -6,48 +6,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kanban 2026</title>
   <link rel="stylesheet" href="estilos.css">
+  <script src="sqlite3.js"></script>
   <script src="script.js"></script>
 
 </head>
 
 <body>
-
   <header>
-    <h2>Kanban 2026</h2>
-    <div class="controls">
-      <input type="text" id="searchInput" placeholder="🔍 Search...">
-      <select id="columnFilter">
-        <option value="all">Filters</option>
-        <option value="TO DO">TO DO</option>
-        <option value="IN PROGRESS">IN PROGRESS</option>
-        <option value="REVIEW">REVIEW</option>
-        <option value="DONE">DONE</option>
-      </select>
-      <button id="addColumn">+ New Column</button>
+    <div>
+      <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M6.25 18.375H8.75V6.25H6.25V18.375ZM15.875 15.875H18.375V6.25H15.875V15.875ZM11.0625 12.125H13.5625V6.25H11.0625V12.125ZM3.9375 24.625C2.83333 24.625 1.90104 24.2448 1.14062 23.4844C0.380208 22.724 0 21.7917 0 20.6875V3.9375C0 2.83333 0.380208 1.90104 1.14062 1.14062C1.90104 0.380208 2.83333 0 3.9375 0H20.6875C21.7917 0 22.724 0.380208 23.4844 1.14062C24.2448 1.90104 24.625 2.83333 24.625 3.9375V20.6875C24.625 21.7917 24.2448 22.724 23.4844 23.4844C22.724 24.2448 21.7917 24.625 20.6875 24.625H3.9375ZM3.9375 20.6875H20.6875V3.9375H3.9375V20.6875ZM3.9375 3.9375V20.6875V3.9375Z"
+          fill="#2B6CEE" />
+      </svg>
+      <h1>Kanban 2026</h1>
     </div>
   </header>
 
-  <div class="board" id="board">
-  </div>
-
-  <template id="template-columna">
-    <div class="columna">
-      <div class="columna-header">
-        <input type="text" class="titulo-columna" placeholder="Escribe el título...">
-        <span class="contador-tareas">0</span>
+  <main>
+    <div class="container-controls">
+      <h2>Product Roadmap</h2>
+      <div class="controls">
+        <div class="search-container">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M12.45 13.5L7.725 8.775C7.35 9.075 6.91875 9.3125 6.43125 9.4875C5.94375 9.6625 5.425 9.75 4.875 9.75C3.5125 9.75 2.35938 9.27813 1.41562 8.33438C0.471875 7.39063 0 6.2375 0 4.875C0 3.5125 0.471875 2.35938 1.41562 1.41562C2.35938 0.471875 3.5125 0 4.875 0C6.2375 0 7.39063 0.471875 8.33438 1.41562C9.27813 2.35938 9.75 3.5125 9.75 4.875C9.75 5.425 9.6625 5.94375 9.4875 6.43125C9.3125 6.91875 9.075 7.35 8.775 7.725L13.5 12.45L12.45 13.5ZM4.875 8.25C5.8125 8.25 6.60938 7.92188 7.26562 7.26562C7.92188 6.60938 8.25 5.8125 8.25 4.875C8.25 3.9375 7.92188 3.14062 7.26562 2.48438C6.60938 1.82812 5.8125 1.5 4.875 1.5C3.9375 1.5 3.14062 1.82812 2.48438 2.48438C1.82812 3.14062 1.5 3.9375 1.5 4.875C1.5 5.8125 1.82812 6.60938 2.48438 7.26562C3.14062 7.92188 3.9375 8.25 4.875 8.25Z"
+              fill="#94A3B8" />
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search...">
+        </div>
+        <select id="columnFilter">
+          <option value="all">Filters</option>
+          <option value="TO DO">TO DO</option>
+          <option value="IN PROGRESS">IN PROGRESS</option>
+          <option value="REVIEW">REVIEW</option>
+          <option value="DONE">DONE</option>
+        </select>
+        <button id="addColumn">+ New Column</button>
       </div>
-      <div class="contenedor-tareas"></div>
-      <button class="add-card-btn">+ Add Card</button>
-    </div>
-  </template>
 
-  <template id="template-tarea">
-    <div class="tarea">
-      <div class="tarea-top">
-        <input type="text" placeholder="Escribe la tarea...">
-      </div>
     </div>
-  </template>
+
+    <div class="board" id="board">
+    </div>
+
+    <template id="template-columna">
+      <div class="columna">
+        <div class="columna-header">
+          <input type="text" class="titulo-columna" placeholder="Escribe el título...">
+          <span class="contador-tareas">0</span>
+        </div>
+        <div class="contenedor-tareas"></div>
+        <button class="add-card-btn">+ Add Card</button>
+      </div>
+    </template>
+
+    <template id="template-tarea">
+      <div class="tarea">
+        <div class="tarea-top">
+          <input type="text" placeholder="Escribe la tarea...">
+        </div>
+      </div>
+    </template>
+  </main>
+
+
 
   <!-- <div class="columna">
       <div class="columna-header">

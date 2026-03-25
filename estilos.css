@@ -12,7 +12,30 @@ body {
 /* 
    HEADER Y CONTROLES
     */
+
 header {
+  padding: 12px 24px;
+  background: white;
+
+  div {
+    display: flex;
+    gap: 10px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #000000;
+  }
+}
+
+.container-controls {
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* header {
   background: white;
   padding: 15px 25px;
   display: flex;
@@ -26,11 +49,35 @@ header h2 {
   font-size: 18px;
   font-weight: 700;
   color: #000000;
-}
+} */
 
 .controls {
   display: flex;
   gap: 12px;
+}
+
+.search-container {
+  position: relative;
+  display: inline-block;
+}
+
+#searchInput {
+  padding: 10px;
+  padding-left: 35px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 input[type="text"],
@@ -39,7 +86,7 @@ select {
   border-radius: 6px;
   border: 1px solid #dfe1e6;
   background: #fafbfc;
-  font-size: 14px;
+  font-size: 12px;
   outline: none;
   transition: border 0.2s;
 }
@@ -57,7 +104,8 @@ button#addColumn {
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
+  font-family: Inter;
 }
 
 button#addColumn:hover {
@@ -208,44 +256,65 @@ button#addColumn:hover {
 /* CONTADOR TAREAS */
 
 .contador-tareas {
-    background-color: #dfe1e6;
-    width: 26px;
-    height: 19px;
-    padding: 0px 8px;
-    border-radius: 50px;
+  background-color: #dfe1e6;
+  width: 26px;
+  height: 19px;
+  padding: 0px 8px;
+  border-radius: 50px;
 }
 
 /*
    MOBILE RESPONSIVE
   */
 @media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 15px;
-  }
 
-  .controls {
-    width: 100%;
-    flex-direction: column;
-  }
+.container-controls {
+  display: block;          
+  padding: 16px;
+  box-sizing: border-box;
+}
 
-  .controls input,
-  .controls select,
-  #addColumn {
-    width: 100%;
-  }
+.container-controls h2 {
+  display: block;          
+  margin: 0 0 16px 0;      
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+}
 
-  .board {
-    flex-direction: column;
-    align-items: center;
-    overflow-x: hidden;
-  }
+.controls {
+  display: flex;          
+  flex-direction: row;     
+  align-items: center;     
+  gap: 12px;               
+  width: 100%;
+  overflow-x: auto;      
+}
 
-  .columna {
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    max-height: none;
-  }
+.search-container input {
+  width: 100%;
+  padding: 8px 12px 8px 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+#columnFilter, 
+#addColumn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  height: 38px;
+}
+
+#addColumn {
+  background-color: #2b6cee;
+  color: white;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.board{
+  display: flex;
+  flex-direction: column;
+}
 }

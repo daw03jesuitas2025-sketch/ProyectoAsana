@@ -1,12 +1,53 @@
+// VARIABLES GLOBALES
+let db_idb; // IndexedDB
+let db_sql; // SQLite
+
+// 1. INICIALIZACIÓN DE BASES DE DATOS
+async function inicializarBasesDeDatos() {
+  try {
+    // Inicializar SQLite
+    const sqlite3 = await sqlite3InitModule();
+    const oo = sqlite3.oo1;
+    db_sql = new oo.DB("kanban.sqlite3", "ct");
+    db_sql.exec("CREATE TABLE IF NOT EXISTS columnas_sql (titulo TEXT)");
+    db_sql.exec(
+      "CREATE TABLE IF NOT EXISTS tareas_sql (texto TEXT, nombre_columna TEXT)",
+    );
+    console.log("SQLite listo");
+
+    // Inicializar IndexedDB
+    const conexion = window.indexedDB.open("kanban_data", 1);
+    conexion.onupgradeneeded = (e) => {
+      db_idb = e.target.result;
+      console.log("Base de datos creada", db_idb);
+      const columnasStore = db_idb.createObjectStore("columnas", {
+        keyPath: "idColumna",
+        autoIncrement: true,
+      });
+      const tareasStore = db_idb.createObjectStore("tareas", {
+        keyPath: "idTarea",
+        autoIncrement: true,
+      });
+    };
+    conexion.onsuccess = () => {
+      db_idb = conexion.result;
+      console.log("Base de datos abierta", 1);
+      cargarEstado();
+    };
+  } catch (error) {
+    console.error("Error inicializando bases de datos:", error);
+  }
+}
+
+// 2.
 window.onload = function () {
   const addColumn = document.getElementById("addColumn");
   const searchInput = document.getElementById("searchInput");
   const columnFilter = document.getElementById("columnFilter");
 
-  addColumn.onclick = function () {
-    añadirColumna();
-  };
+  addColumn.onclick = () => añadirColumna();
 
+  // Buscador
   searchInput.addEventListener("input", function () {
     const texto = searchInput.value.toLowerCase();
     document.querySelectorAll(".tarea").forEach((tarea) => {
@@ -16,18 +57,15 @@ window.onload = function () {
     });
   });
 
-  // Evento filtro
-
+  // Filtro de columnas
   columnFilter.addEventListener("change", function () {
     const filtro = columnFilter.value.toUpperCase();
     const columnas = document.querySelectorAll(".columna");
 
-    columnas.forEach(function (columna) {
+    columnas.forEach((columna) => {
       const titulo = columna
         .querySelector(".columna-header input")
         .value.toUpperCase();
-
-      // Si el filtro es "ALL" O el título coincide
       if (filtro === "ALL" || titulo === filtro) {
         columna.style.display = "flex";
       } else {
@@ -36,76 +74,195 @@ window.onload = function () {
     });
   });
 
-  // Cargar el estado al iniciar
-  cargarEstado();
+  inicializarBasesDeDatos();
 };
 
+// 3. GUARDAR Y CARGAR DATOS
 
-// INDEXDDB
+function guardarEstado() {
+  if (!db_idb || !db_sql) return;
 
-const indexdDB = window.indexedDB;
-let db;
-const conexion = indexdDB.open("kanban_data", 1);
+  const tx = db_idb.transaction(["columnas", "tareas"], "readwrite");
+  const storeCols = tx.objectStore("columnas");
+  const storeTareas = tx.objectStore("tareas");
 
-conexion.onsuccess = () => {
-  db = conexion.result;
-  console.log('Base de datos abierta', 1);
-  cargarEstado();
+  // Limpiar datos viejos
+  storeCols.clear();
+  storeTareas.clear();
+  db_sql.exec("DELETE FROM columnas_sql");
+  db_sql.exec("DELETE FROM tareas_sql");
+
+  document.querySelectorAll(".columna").forEach((col) => {
+    const tituloInput = col.querySelector(".columna-header input");
+    const titulo = tituloInput ? tituloInput.value : "";
+    const contador = col.querySelector(".contador-tareas");
+    const peticionCol = storeCols.add({ titulo: titulo });
+    db_sql.exec({
+      sql: "INSERT INTO columnas_sql (titulo) VALUES (?)",
+      bind: [titulo],
+    });
+
+    peticionCol.onsuccess = (e) => {
+      const idColumnaGenerado = e.target.result;
+
+      // Guardamos las tareas de esta columna
+      col.querySelectorAll(".tarea input").forEach((t) => {
+        const textoTarea = t.value;
+        storeTareas.add({
+          texto: textoTarea,
+          idRelacionColumna: idColumnaGenerado,
+        });
+        db_sql.exec({
+          sql: "INSERT INTO tareas_sql (texto, nombre_columna) VALUES (?, ?)",
+          bind: [textoTarea, titulo],
+        });
+      });
+      // contar tareas
+      const contarTareas = db_sql.exec({
+        sql: "SELECT COUNT(*) FROM tareas_sql WHERE nombre_columna = ?",
+        bind: [titulo],
+        returnValue: "resultRows",
+      });
+      if (contador && contarTareas[0]) {
+        contador.textContent = contarTareas[0][0];
+      }
+    };
+  });
 }
 
-conexion.onupgradeneeded = (e) =>{
-  db = e.target.result;
-  console.log('Base de datos creada', db);
-  const columnasStore = db.createObjectStore('columnas', {
-    keyPath: 'idColumna', autoIncrement: true
-  })
-  const tareasStore = db.createObjectStore('tareas', {
-    keyPath : 'id', autoIncrement: true
-  })
+function cargarEstado() {
+  if (!db_idb) return;
+
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+
+  const tx = db_idb.transaction(["columnas", "tareas"], "readonly");
+  const storeCols = tx.objectStore("columnas");
+  const storeTareas = tx.objectStore("tareas");
+
+  storeCols.openCursor().onsuccess = (e) => {
+    const cursorCol = e.target.result;
+    if (cursorCol) {
+      const colData = cursorCol.value;
+      añadirColumna(colData.titulo);
+      // TO DO: refactorizar codigo
+      const todasLasCols = document.querySelectorAll(".columna");
+      const ultimaCol = todasLasCols[todasLasCols.length - 1];
+      const contenedorTareas = ultimaCol.querySelector(".contenedor-tareas");
+
+      storeTareas.openCursor().onsuccess = (e) => {
+        const cursorTarea = e.target.result;
+        if (cursorTarea) {
+          if (cursorTarea.value.idRelacionColumna === colData.idColumna) {
+            crearTarea(contenedorTareas, cursorTarea.value.texto);
+
+            db_sql.exec({
+              sql: "INSERT INTO tareas_sql (texto, nombre_columna) VALUES (?, ?)",
+              bind: [cursorTarea.value.texto, colData.titulo],
+            });
+          }
+          cursorTarea.continue();
+        } else {
+          // Cuando el cursor de tareas termina (null), pedimos el conteo a SQLite
+          const resContar = db_sql.exec({
+            sql: "SELECT COUNT(*) FROM tareas_sql WHERE nombre_columna = ?",
+            bind: [colData.titulo],
+            returnValue: "resultRows",
+          });
+          ultimaCol.querySelector(".contador-tareas").textContent =
+            resContar[0][0];
+        }
+      };
+      cursorCol.continue();
+    }
+  };
 }
 
-conexion.onerror = (error) => {
-  console.log('Eror: ', error);
+// 4.
+
+function añadirColumna(textoExistente = "") {
+  const board = document.getElementById("board");
+  const template = document.getElementById("template-columna").content;
+
+  const clon = document.importNode(template, true);
+  const columna = clon.querySelector(".columna");
+  const header = clon.querySelector(".columna-header");
+  const titulo = clon.querySelector(".columna-header input");
+  const contenedorTareas = clon.querySelector(".contenedor-tareas");
+  const btnTarea = clon.querySelector(".add-card-btn");
+
+  // Si viene de la base de datos, le ponemos su título real
+  titulo.value = textoExistente;
+
+  titulo.addEventListener("change", guardarEstado);
+  ContenedorDrop(contenedorTareas);
+  crearBotonesAccion(header, titulo, columna);
+
+  board.appendChild(clon);
+
+  btnTarea.onclick = () => crearTarea(contenedorTareas, "");
+
+  if (textoExistente === "") {
+    guardarEstado();
+  }
 }
 
+function crearTarea(contenedor, textoExistente = "") {
+  const template = document.getElementById("template-tarea").content;
+  const clon = document.importNode(template, true);
+  const tarea = clon.querySelector(".tarea");
+  const tareaTop = clon.querySelector(".tarea-top");
+  const inputTarea = clon.querySelector("input");
 
-// Drag and Drop
+  // Si hay texto, lo ponemos. Si no, queda vacío.
+  inputTarea.value = textoExistente;
+  inputTarea.addEventListener("change", guardarEstado);
 
-let tareaArrastrada = null;
+  crearBotonesAccion(tareaTop, inputTarea, tarea);
+  DragAndDrop(tarea);
+
+  contenedor.appendChild(clon);
+
+  if (textoExistente === "") {
+    guardarEstado();
+  }
+}
+
+// function contarTareas() {
+//   const columnas = document.querySelectorAll(".columna");
+//   columnas.forEach((columna) => {
+//     const contador = columna.querySelector(".contador-tareas");
+//     const numTareas = columna.querySelectorAll(".tarea").length;
+//     contador.textContent = numTareas;
+//   });
+// }
 
 function DragAndDrop(tarea) {
   tarea.setAttribute("draggable", "true");
-  tarea.addEventListener("dragstart", () => {
-    tareaArrastrada = tarea;
+  tarea.ondragstart = () => {
     tarea.classList.add("dragging");
-  });
-  tarea.addEventListener("dragend", () => {
+    window.tareaArrastrada = tarea;
+  };
+  tarea.ondragend = () => {
     tarea.classList.remove("dragging");
-    tareaArrastrada = null;
-  });
+    window.tareaArrastrada = null;
+  };
 }
 
 function ContenedorDrop(contenedor) {
-  // dragover cuando la tarea se arrastra sobre el contenedor
-  contenedor.addEventListener("dragover", (e) => {
+  contenedor.ondragover = (e) => {
     e.preventDefault();
     contenedor.classList.add("drag-over");
-  });
-  // dragleave cuando la tarea la quito del contenedor
-  contenedor.addEventListener("dragleave", () => {
+  };
+  contenedor.ondragleave = () => contenedor.classList.remove("drag-over");
+  contenedor.ondrop = () => {
     contenedor.classList.remove("drag-over");
-  });
-  // cuando la suelto
-  contenedor.addEventListener("drop", () => {
-    contenedor.classList.remove("drag-over");
-    if (tareaArrastrada) {
-      contenedor.appendChild(tareaArrastrada);
+    if (window.tareaArrastrada) {
+      contenedor.appendChild(window.tareaArrastrada);
       guardarEstado();
     }
-  });
+  };
 }
-
-// botones de editar y eliminar
 
 function crearBotonesAccion(
   contenedorBotones,
@@ -128,121 +285,5 @@ function crearBotonesAccion(
       elementoAEliminar.remove();
       guardarEstado();
     }
-  });
-}
-
-function crearTarea(boton, contenedor) {
-  boton.addEventListener("click", function () {
-    const template = document.getElementById("template-tarea").content;
-    const clon = document.importNode(template, true);
-    const tarea = clon.querySelector(".tarea");
-    const tareaTop = clon.querySelector(".tarea-top");
-    const inputTarea = clon.querySelector("input");
-
-    inputTarea.addEventListener("change", guardarEstado);
-
-    crearBotonesAccion(tareaTop, inputTarea, tarea);
-    DragAndDrop(tarea);
-
-    contenedor.appendChild(clon);
-    guardarEstado();
-  });
-}
-
-function añadirColumna() {
-  const board = document.getElementById("board");
-  const template = document.getElementById("template-columna").content;
-
-  // clonar el template
-  const clon = document.importNode(template, true);
-
-  const columna = clon.querySelector(".columna");
-  const header = clon.querySelector(".columna-header");
-  const titulo = clon.querySelector(".columna-header input");
-  const contenedorTareas = clon.querySelector(".contenedor-tareas");
-  const btnTarea = clon.querySelector(".add-card-btn");
-
-  titulo.addEventListener("change", guardarEstado);
-  ContenedorDrop(contenedorTareas);
-
-  crearBotonesAccion(header, titulo, columna);
-
-  board.appendChild(clon);
-
-  crearTarea(btnTarea, contenedorTareas);
-
-  contarTareas();
-  guardarEstado();
-}
-
-// Contador tareas
-function contarTareas() {
-  // foreach para recorrer las tareas de cada columna y guardar los datos si añades o eliminas tareas
-  const columnas = document.querySelectorAll(".columna");
-
-  columnas.forEach((columna) => {
-    const contador = columna.querySelector(".contador-tareas");
-    const numTareas = columna.querySelectorAll(".tarea").length;
-    contador.textContent = numTareas;
-  });
-}
-
-/* LOCAL STORAGE */
-
-function guardarEstado() {
-  const columnas = [];
-  document.querySelectorAll(".columna").forEach((col) => {
-    const inputTitulo = col.querySelector(".columna-header input");
-    const titulo = inputTitulo ? inputTitulo.value : "";
-    const tareas = [];
-    col.querySelectorAll(".tarea input").forEach((t) => tareas.push(t.value));
-    columnas.push({ titulo, tareas });
-    const contador = col.querySelector(".contador-tareas");
-    contador.textContent = tareas.length;
-  });
-  // convertir en texto json
-  localStorage.setItem("kanban_data", JSON.stringify(columnas));
-}
-
-function cargarEstado() {
-  const board = document.getElementById("board");
-  const datosRaw = localStorage.getItem("kanban_data");
-  if (!datosRaw) return;
-  // convertir de texto a objeto
-  const datos = JSON.parse(datosRaw);
-  board.innerHTML = "";
-
-  datos.forEach((dataCol) => {
-    const tempCol = document.getElementById("template-columna").content;
-    const clonCol = document.importNode(tempCol, true);
-    const columna = clonCol.querySelector(".columna");
-    const header = clonCol.querySelector(".columna-header");
-    const tituloInput = clonCol.querySelector(".columna-header input");
-    const contador = clonCol.querySelector(".contador-tareas");
-    const contenedorTareas = clonCol.querySelector(".contenedor-tareas");
-    const btnTarea = clonCol.querySelector(".add-card-btn");
-
-    tituloInput.value = dataCol.titulo;
-    contador.textContent = dataCol.tareas.length;
-
-    tituloInput.addEventListener("change", guardarEstado);
-    ContenedorDrop(contenedorTareas);
-    crearBotonesAccion(header, tituloInput, columna);
-    crearTarea(btnTarea, contenedorTareas);
-
-    dataCol.tareas.forEach((textoTarea) => {
-      const tempTarea = document.getElementById("template-tarea").content;
-      const clonTarea = document.importNode(tempTarea, true);
-      const tareaDiv = clonTarea.querySelector(".tarea");
-      const tareaTop = clonTarea.querySelector(".tarea-top");
-      const inputTarea = clonTarea.querySelector("input");
-      inputTarea.value = textoTarea;
-
-      inputTarea.addEventListener("change", guardarEstado);
-      crearBotonesAccion(tareaTop, inputTarea, tareaDiv);
-      DragAndDrop(tareaDiv);
-      contenedorTareas.appendChild(clonTarea);
-    });
-    board.appendChild(clonCol);
   });
 }
