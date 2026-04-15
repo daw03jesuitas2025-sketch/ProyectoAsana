@@ -218,7 +218,6 @@ button#addColumn:hover { background: var(--blue-hover); }
 
 .tarea-top {
   display: flex;
-  flex-direction: column;
   gap: 8px;
   position: relative;
 }
@@ -293,8 +292,6 @@ button#addColumn:hover { background: var(--blue-hover); }
   border-radius: 8px;
   box-shadow: var(--shadow-md);
   z-index: 100;
-  display: none;
-  flex-direction: column;
   overflow: hidden;
 }
 
