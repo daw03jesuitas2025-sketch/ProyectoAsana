@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kanban 2026</title>
   <link rel="stylesheet" href="estilos.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+    rel="stylesheet">
   <script src="sqlite3.js"></script>
   <script src="script.js"></script>
 
@@ -36,13 +41,20 @@
           </svg>
           <input type="text" id="searchInput" placeholder="Search...">
         </div>
-        <select id="columnFilter">
-          <option value="all">Filters</option>
-          <option value="TO DO">TO DO</option>
-          <option value="IN PROGRESS">IN PROGRESS</option>
-          <option value="REVIEW">REVIEW</option>
-          <option value="DONE">DONE</option>
-        </select>
+        <!-- FILTROS -->
+        <div id="columnFilter">
+          <button id="filter" onclick="toggleMenu();"><svg width="12" height="8" viewBox="0 0 12 8" fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M4.66667 8V6.66667H7.33333V8H4.66667ZM2 4.66667V3.33333H10V4.66667H2ZM0 1.33333V0H12V1.33333H0Z"
+                fill="#0F172A" />
+            </svg>Filters</button>
+          <div class="taks">
+            <button id="btn-design" onclick="filtrarPorTipo('DESIGN')">DESIGN</button>
+            <button id="btn-bug" onclick="filtrarPorTipo('BUG')">BUG</button>
+            <button id="btn-urgent" onclick="filtrarPorTipo('URGENT')">URGENT</button>
+            <button onclick="filtrarPorTipo('ALL')">ALL</button>
+          </div>
+        </div>
         <button id="addColumn">+ New Column</button>
       </div>
 
@@ -56,6 +68,11 @@
         <div class="columna-header">
           <input type="text" class="titulo-columna" placeholder="Escribe el título...">
           <span class="contador-tareas">0</span>
+          <button class="btn-tres-puntos">•••</button>
+          <div class="menu-opciones">
+<button class="btnEditar btn-accion">✎ Editar</button>
+<button class="btnEliminar btn-accion">✕ Eliminar</button>
+          </div>
         </div>
         <div class="contenedor-tareas"></div>
         <button class="add-card-btn">+ Add Card</button>
@@ -65,7 +82,22 @@
     <template id="template-tarea">
       <div class="tarea">
         <div class="tarea-top">
+          <div class="etiquetas"></div>
           <input type="text" placeholder="Escribe la tarea...">
+          <select class="tipo-tarea">
+            <option value="DESIGN">DESIGN</option>
+            <option value="BUG">BUG</option>
+            <option value="URGENT">URGENT</option>
+          </select>
+          <button class="btn-tres-puntos">•••</button>
+          <div class="menu-opciones">
+<button class="btnEditar btn-accion">✎ Editar</button>
+<button class="btnEliminar btn-accion">✕ Eliminar</button>
+          </div>
+        </div>
+        <div class="tarea-meta">
+          <img src="User.png" alt="creador" id="foto">
+          <span class="fecha"></span>
         </div>
       </div>
     </template>

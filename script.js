@@ -11,7 +11,7 @@ async function inicializarBasesDeDatos() {
     db_sql = new oo.DB("kanban.sqlite3", "ct");
     db_sql.exec("CREATE TABLE IF NOT EXISTS columnas_sql (titulo TEXT)");
     db_sql.exec(
-      "CREATE TABLE IF NOT EXISTS tareas_sql (texto TEXT, nombre_columna TEXT)",
+      "CREATE TABLE IF NOT EXISTS tareas_sql (texto TEXT, nombre_columna TEXT, fecha TEXT, tipo TEXT)"
     );
     console.log("SQLite listo");
 
@@ -56,26 +56,25 @@ window.onload = function () {
       tarea.style.display = contenido.includes(texto) ? "block" : "none";
     });
   });
-
-  // Filtro de columnas
-  columnFilter.addEventListener("change", function () {
-    const filtro = columnFilter.value.toUpperCase();
-    const columnas = document.querySelectorAll(".columna");
-
-    columnas.forEach((columna) => {
-      const titulo = columna
-        .querySelector(".columna-header input")
-        .value.toUpperCase();
-      if (filtro === "ALL" || titulo === filtro) {
-        columna.style.display = "flex";
-      } else {
-        columna.style.display = "none";
-      }
-    });
-  });
-
   inicializarBasesDeDatos();
 };
+
+// para mostrar y ocultar el menu 
+function toggleMenu() {
+  const menu = document.querySelector(".taks");
+  menu.classList.toggle("activo");
+}
+
+function filtrarPorTipo(tipo) {
+  document.querySelectorAll(".tarea").forEach((tarea) => {
+    // comprobar de que tipo es la tarea
+    if (tipo === "ALL" || tarea.dataset.tipo === tipo) {
+      tarea.style.display = "block";
+    } else {
+      tarea.style.display = "none";
+    }
+  });
+}
 
 // 3. GUARDAR Y CARGAR DATOS
 
@@ -106,31 +105,29 @@ function guardarEstado() {
       const idColumnaGenerado = e.target.result;
 
       // Guardamos las tareas de esta columna
-      col.querySelectorAll(".tarea input").forEach((t) => {
-        const textoTarea = t.value;
+      col.querySelectorAll(".tarea").forEach((t) => {
+        const inputT = t.querySelector("input");
+        const fechaTarea = col.querySelector(".fecha").textContent;
+        const textoTarea = inputT.value;
+
+        const tipo = t.dataset.tipo || "DESIGN";
+
         storeTareas.add({
           texto: textoTarea,
+          fecha_creacion: fechaTarea,
+          tipo: tipo,
           idRelacionColumna: idColumnaGenerado,
         });
         db_sql.exec({
-          sql: "INSERT INTO tareas_sql (texto, nombre_columna) VALUES (?, ?)",
-          bind: [textoTarea, titulo],
+          sql: "INSERT INTO tareas_sql (texto, nombre_columna, fecha, tipo) VALUES (?, ?, ?, ?)",
+          bind: [textoTarea, titulo, fechaTarea, tipo],
         });
       });
-      // contar tareas
-      const contarTareas = db_sql.exec({
-        sql: "SELECT COUNT(*) FROM tareas_sql WHERE nombre_columna = ?",
-        bind: [titulo],
-        returnValue: "resultRows",
-      });
-      if (contador && contarTareas[0]) {
-        contador.textContent = contarTareas[0][0];
-      }
     };
   });
 }
 
-function cargarEstado() {
+async function cargarEstado() {
   if (!db_idb) return;
 
   const board = document.getElementById("board");
@@ -145,7 +142,6 @@ function cargarEstado() {
     if (cursorCol) {
       const colData = cursorCol.value;
       añadirColumna(colData.titulo);
-      // TO DO: refactorizar codigo
       const todasLasCols = document.querySelectorAll(".columna");
       const ultimaCol = todasLasCols[todasLasCols.length - 1];
       const contenedorTareas = ultimaCol.querySelector(".contenedor-tareas");
@@ -154,23 +150,17 @@ function cargarEstado() {
         const cursorTarea = e.target.result;
         if (cursorTarea) {
           if (cursorTarea.value.idRelacionColumna === colData.idColumna) {
-            crearTarea(contenedorTareas, cursorTarea.value.texto);
-
-            db_sql.exec({
-              sql: "INSERT INTO tareas_sql (texto, nombre_columna) VALUES (?, ?)",
-              bind: [cursorTarea.value.texto, colData.titulo],
-            });
+            crearTarea(
+              contenedorTareas,
+              cursorTarea.value.texto,
+              cursorTarea.value.fecha_creacion,
+              cursorTarea.value.tipo
+            );
+            ultimaCol.querySelector(".contador-tareas").textContent =
+              Number(ultimaCol.querySelector(".contador-tareas").textContent) +
+              1;
           }
           cursorTarea.continue();
-        } else {
-          // Cuando el cursor de tareas termina (null), pedimos el conteo a SQLite
-          const resContar = db_sql.exec({
-            sql: "SELECT COUNT(*) FROM tareas_sql WHERE nombre_columna = ?",
-            bind: [colData.titulo],
-            returnValue: "resultRows",
-          });
-          ultimaCol.querySelector(".contador-tareas").textContent =
-            resContar[0][0];
         }
       };
       cursorCol.continue();
@@ -207,35 +197,78 @@ function añadirColumna(textoExistente = "") {
   }
 }
 
-function crearTarea(contenedor, textoExistente = "") {
+function crearTarea(contenedor, textoExistente = "", fechaGuardada = null, tipoGuardado = null) {
   const template = document.getElementById("template-tarea").content;
   const clon = document.importNode(template, true);
+
   const tarea = clon.querySelector(".tarea");
   const tareaTop = clon.querySelector(".tarea-top");
   const inputTarea = clon.querySelector("input");
+  const fecha = clon.querySelector(".fecha");
+  const selectTipo = clon.querySelector(".tipo-tarea");
+  const contenedorEtiquetas = clon.querySelector(".etiquetas");
 
-  // Si hay texto, lo ponemos. Si no, queda vacío.
+  // pintar etiqueta
+  function pintarEtiqueta(tipo) {
+    contenedorEtiquetas.innerHTML = "";
+    const etiqueta = document.createElement("span");
+    etiqueta.classList.add("etiqueta");
+
+    if (tipo === "DESIGN") etiqueta.classList.add("design");
+    if (tipo === "BUG") etiqueta.classList.add("bug");
+    if (tipo === "URGENT") etiqueta.classList.add("urgent");
+
+    etiqueta.textContent = tipo;
+
+    contenedorEtiquetas.appendChild(etiqueta);
+  }
+
+  // Fecha
+  if (fechaGuardada) {
+    fecha.textContent = fechaGuardada;
+  } else {
+    const fechaActual = new Date();
+    fecha.textContent = fechaActual.toLocaleDateString("es-ES");
+  }
+
+  // Texto
   inputTarea.value = textoExistente;
   inputTarea.addEventListener("change", guardarEstado);
+
+  // TIPO
+  if (tipoGuardado) {
+    // tarea ya existente
+    selectTipo.value = tipoGuardado;
+    tarea.dataset.tipo = tipoGuardado;
+    pintarEtiqueta(tipoGuardado);
+    selectTipo.style.display = "none";
+  } else {
+    // si la tarea es nueva se muestra
+    selectTipo.style.display = "block";
+  }
+
+  // cambiar tipo
+  selectTipo.addEventListener("change", () => {
+    const nuevoTipo = selectTipo.value;
+
+    tarea.dataset.tipo = nuevoTipo;
+    pintarEtiqueta(nuevoTipo);
+
+    selectTipo.style.display = "none"; // se oculta después de elegir
+
+    guardarEstado();
+  });
 
   crearBotonesAccion(tareaTop, inputTarea, tarea);
   DragAndDrop(tarea);
 
   contenedor.appendChild(clon);
 
-  if (textoExistente === "") {
+  // guardar solo si ya eligió tipo
+  if (textoExistente === "" && tipoGuardado) {
     guardarEstado();
   }
 }
-
-// function contarTareas() {
-//   const columnas = document.querySelectorAll(".columna");
-//   columnas.forEach((columna) => {
-//     const contador = columna.querySelector(".contador-tareas");
-//     const numTareas = columna.querySelectorAll(".tarea").length;
-//     contador.textContent = numTareas;
-//   });
-// }
 
 function DragAndDrop(tarea) {
   tarea.setAttribute("draggable", "true");
@@ -269,16 +302,32 @@ function crearBotonesAccion(
   inputAEnfocar,
   elementoAEliminar,
 ) {
-  const btnEditar = document.createElement("button");
-  btnEditar.textContent = "✎";
-  btnEditar.classList.add("btn-accion");
-  contenedorBotones.appendChild(btnEditar);
-  btnEditar.addEventListener("click", () => inputAEnfocar.focus());
+  const btnPuntos = contenedorBotones.querySelector(".btn-tres-puntos");
+  const menu = contenedorBotones.querySelector(".menu-opciones");
+  const btnEditar = menu.querySelector(".btnEditar");
+  const btnEliminar = menu.querySelector(".btnEliminar");
 
-  const btnEliminar = document.createElement("button");
-  btnEliminar.textContent = "✕";
-  btnEliminar.classList.add("btn-accion");
-  contenedorBotones.appendChild(btnEliminar);
+  btnPuntos.onclick = (e) => {
+    e.stopPropagation(); // 1. Que el clic no afecte
+
+    // 2. Guarda si el menú ya estaba abierto antes de cerrar todos
+    const estabaAbierto = menu.style.display === "block";
+
+    // 3. Cierra todo los menús que existan en la página
+    document
+      .querySelectorAll(".menu-opciones")
+      .forEach((m) => (m.style.display = "none"));
+
+    // 4. Si no estaba abierto, aparece
+    if (!estabaAbierto) {
+      menu.style.display = "block";
+    }
+  };
+
+  btnEditar.addEventListener("click", () => {
+    inputAEnfocar.focus();
+    menu.style.display = "none";
+  });
 
   btnEliminar.addEventListener("click", function () {
     if (confirm("¿Eliminar este elemento?")) {
@@ -286,4 +335,7 @@ function crearBotonesAccion(
       guardarEstado();
     }
   });
+
+  // Si haces clic fuera del menú, se cierra solo
+  document.addEventListener("click", () => (menu.style.display = "none"));
 }
