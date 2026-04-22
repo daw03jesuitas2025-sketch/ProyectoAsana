@@ -1,6 +1,5 @@
 * {
   margin: 0;
-  padding: 0;
   box-sizing: border-box;
   font-family: "Inter", sans-serif;
 }
@@ -65,15 +64,12 @@ header h1 {
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  pointer-events: none;
   opacity: 0.5;
 }
 
 #searchInput {
-  padding: 10px 10px 10px 35px;
-  border: 1px solid var(--border-color);
+  padding: 10px 35px;
+  border: 1px solid var(--border-color); /* falta */
   border-radius: 6px;
   width: 320px;
   font-size: 14px;
@@ -85,10 +81,12 @@ header h1 {
   display: flex;
   align-items: center;
   background: #ffffff;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color); /* falta */
   border-radius: 6px;
   padding: 6px 12px;
 }
+/* TENGO QUE MIRAR ESTO */
+
  /* Botones iguales */
   #columnFilter, 
   #addColumn {
@@ -117,20 +115,21 @@ header h1 {
   top: 45px;
   right: 0;
   background: white;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color); /* falta */
   border-radius: 10px;
   padding: 10px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md); /* no se si esto esta ya */
   z-index: 100;
   flex-direction: column;
   gap: 8px;
 }
 
+/* FALTA */
 .taks.activo { display: flex; }
 
 /* Botón Añadir Columna */
 button#addColumn {
-  background: var(--blue-primary);
+  background: var(--blue-primary); /* falta */
   color: white;
   border: none;
   padding: 8px 16px;
@@ -138,26 +137,26 @@ button#addColumn {
   cursor: pointer;
   font-weight: 600;
   font-size: 12px;
-  transition: background 0.2s;
+  transition: background 0.2s; /* falta */
 }
 
-button#addColumn:hover { background: var(--blue-hover); }
+button#addColumn:hover { background: var(--blue-hover); } /* falta */
 
 /* TABLERO (BOARD) */
 
 .board {
   display: flex;
+  align-items: flex-start;
   gap: 16px;
   padding: 20px;
   overflow-x: auto;
-  align-items: flex-start;
-  min-height: calc(100vh - 150px);
+  min-height: calc(100vh - 150px); /* falta */
 }
 
 /* COLUMNAS */
 
 .columna {
-  background: var(--bg-columna);
+  background: var(--bg-columna); /* falta */
   min-width: 300px;
   max-width: 300px;
   padding: 12px;
@@ -258,13 +257,13 @@ button#addColumn:hover { background: var(--blue-hover); }
 .etiqueta {
   font-size: 10px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: 4px;
   color: white;
   text-transform: uppercase;
 }
 
-.design { background-color: #6366f1; }
+.design { background-color:#6366f1; }
 .bug    { background-color: #ef4444; }
 .urgent { background-color: #3b82f6; }
 
@@ -394,8 +393,7 @@ button#addColumn:hover { background: var(--blue-hover); }
     min-width: 0;
     max-width: none; */
     width: 342px;
-height: 504px;
-min-width: 342px;
+    min-width: 342px;
 
   }
 }
